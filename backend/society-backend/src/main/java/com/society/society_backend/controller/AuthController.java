@@ -1,11 +1,15 @@
 package com.society.society_backend.controller;
+
+import com.society.society_backend.dto.AuthResponse;
 import com.society.society_backend.dto.LoginRequest;
 import com.society.society_backend.dto.RegisterRequest;
 import com.society.society_backend.dto.UserResponse;
 import com.society.society_backend.entity.Flat;
+import com.society.society_backend.entity.Role;
 import com.society.society_backend.entity.User;
 import com.society.society_backend.repository.FlatRepository;
 import com.society.society_backend.repository.UserRepository;
+import com.society.society_backend.security.JwtService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,16 +18,20 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
     private final UserRepository userRepository;
     private final FlatRepository flatRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthController(UserRepository userRepository,
                           FlatRepository flatRepository,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          JwtService jwtService) {
         this.userRepository = userRepository;
         this.flatRepository = flatRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -37,7 +45,7 @@ public class AuthController {
         user.setEmail(request.email());
         user.setPhone(request.phone());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setRole(request.role());
+        user.setRole(Role.RESIDENT);   // public sign-up is always a resident
 
         if (request.flatId() != null) {
             Flat flat = flatRepository.findById(request.flatId()).orElse(null);
@@ -62,7 +70,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account is disabled");
         }
 
-        return ResponseEntity.ok(toResponse(user));
+        String token = jwtService.generateToken(user);
+        return ResponseEntity.ok(new AuthResponse(token, toResponse(user)));
     }
 
     private UserResponse toResponse(User user) {
