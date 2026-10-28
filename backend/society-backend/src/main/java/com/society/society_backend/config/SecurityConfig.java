@@ -30,7 +30,19 @@ public class SecurityConfig {
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/hello").permitAll()
+
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/flats").hasRole("ADMIN")
+
+                        .requestMatchers("/api/residents/search").hasRole("SECURITY")
+
+                        .requestMatchers(HttpMethod.POST, "/api/visitors").hasRole("SECURITY")
+                        .requestMatchers(HttpMethod.GET, "/api/visitors/my").hasRole("RESIDENT")
+                        .requestMatchers("/api/visitors/*/approve", "/api/visitors/*/reject").hasRole("RESIDENT")
+                        .requestMatchers("/api/visitors/*/entry", "/api/visitors/*/exit").hasRole("SECURITY")
+                        .requestMatchers(HttpMethod.GET, "/api/visitors/*").hasAnyRole("SECURITY", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/visitors").hasRole("ADMIN")
+
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
         return http.build();
