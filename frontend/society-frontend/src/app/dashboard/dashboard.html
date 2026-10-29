@@ -1,0 +1,5 @@
+@if (auth.currentUser(); as user) {
+  <h1>Welcome, {{ user.fullName }}</h1>
+  <p>Your role: {{ user.role }}</p>
+  <button (click)="auth.logout()">Log out</button>
+}
