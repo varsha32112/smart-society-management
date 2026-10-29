@@ -1,1 +1,0 @@
-{"token":"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJyYXZpQGV4YW1wbGUuY29tIiwicm9sZSI6IlJFU0lERU5UIiwiaWF0IjoxNzkzMDk0ODYzLCJleHAiOjE3OTMxODEyNjN9.eOe5RU7PlvwB7uSdevSV9X6qgwHLCYaWRIJT_gNJ5J0zaqpZYVoDeNxvAMkRmmb_","user":{"id":1,"fullName":"Ravi Kumar","email":"ravi@example.com","role":"RESIDENT","flatId":1}}
