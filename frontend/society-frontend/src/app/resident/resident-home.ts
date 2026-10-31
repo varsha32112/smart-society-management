@@ -7,6 +7,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   template: `
     <nav class="tabs">
       <a routerLink="visitors" routerLinkActive="active">Visitors</a>
+      <a routerLink="complaints" routerLinkActive="active">Complaints</a>
     </nav>
     <router-outlet />
   `,

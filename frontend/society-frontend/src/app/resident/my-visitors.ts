@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Visitor, VisitorService } from '../core/visitor.service';
+import { errorMessage } from '../core/error-message';
 
 @Component({
   selector: 'app-my-visitors',
@@ -97,7 +98,7 @@ export class MyVisitors {
         this.loading.set(false);
       },
       error: (err: HttpErrorResponse) => {
-        this.error.set(this.messageFor(err));
+        this.error.set(errorMessage(err));
         this.loading.set(false);
       }
     });
@@ -117,21 +118,21 @@ export class MyVisitors {
         this.busyId.set(null);
       },
       error: (err: HttpErrorResponse) => {
-        this.error.set(this.messageFor(err));
+        this.error.set(errorMessage(err));
         this.busyId.set(null);
         this.load();
       }
     });
   }
 
-  private messageFor(err: HttpErrorResponse): string {
-    const serverMessage = typeof err.error?.message === 'string' ? err.error.message : '';
-    if (serverMessage) {
-      return serverMessage;
-    }
-    if (err.status === 0) {
-      return 'Cannot reach the server. Please try again.';
-    }
-    return 'Something went wrong. Please try again.';
-  }
+//   private messageFor(err: HttpErrorResponse): string {
+//     const serverMessage = typeof err.error?.message === 'string' ? err.error.message : '';
+//     if (serverMessage) {
+//       return serverMessage;
+//     }
+//     if (err.status === 0) {
+//       return 'Cannot reach the server. Please try again.';
+//     }
+//     return 'Something went wrong. Please try again.';
+//   }
 }
