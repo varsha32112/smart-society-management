@@ -8,6 +8,6 @@ public interface VisitorRepository extends JpaRepository<Visitor, Long>{
     List<Visitor> findByFlatIdOrderByIdDesc(Long flatId);
 
     List<Visitor> findByFlatIdAndStatusOrderByIdDesc(Long flatId, VisitorStatus status);
-
+    List<Visitor> findTop50ByOrderByIdDesc();
     List<Visitor> findAllByOrderByIdDesc();
 }

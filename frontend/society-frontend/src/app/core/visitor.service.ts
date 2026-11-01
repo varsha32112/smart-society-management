@@ -16,10 +16,18 @@ export interface Visitor {
   createdAt: string | null;
 }
 
+export interface NewVisitor {
+  visitorName: string;
+  visitorPhone: string | null;
+  purpose: string | null;
+  flatId: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class VisitorService {
   private http = inject(HttpClient);
 
+  // Resident
   myVisitors() {
     return this.http.get<Visitor[]>('/api/visitors/my');
   }
@@ -30,5 +38,22 @@ export class VisitorService {
 
   reject(id: number) {
     return this.http.put<Visitor>(`/api/visitors/${id}/reject`, {});
+  }
+
+  // Security
+  register(visitor: NewVisitor) {
+    return this.http.post<Visitor>('/api/visitors', visitor);
+  }
+
+  recent() {
+    return this.http.get<Visitor[]>('/api/visitors/recent');
+  }
+
+  recordEntry(id: number) {
+    return this.http.put<Visitor>(`/api/visitors/${id}/entry`, {});
+  }
+
+  recordExit(id: number) {
+    return this.http.put<Visitor>(`/api/visitors/${id}/exit`, {});
   }
 }

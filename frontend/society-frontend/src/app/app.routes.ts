@@ -11,6 +11,8 @@ import { AdminHome } from './admin/admin-home';
 import { MyComplaints } from './resident/my-complaints';
 import { MyBills } from './resident/my-bills';
 import { MyFamily } from './resident/my-family';
+import { RegisterVisitor } from './security/register-visitor';
+import { GateLog } from './security/gate-log';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -31,7 +33,16 @@ export const routes: Routes = [
           { path: 'family', component: MyFamily }
         ]
       },
-      { path: 'security', component: SecurityHome, canActivate: [roleGuard(['SECURITY'])] },
+      {
+  path: 'security',
+  component: SecurityHome,
+  canActivate: [roleGuard(['SECURITY'])],
+  children: [
+    { path: '', pathMatch: 'full', redirectTo: 'register' },
+    { path: 'register', component: RegisterVisitor },
+    { path: 'log', component: GateLog }
+  ]
+},
       { path: 'admin', component: AdminHome, canActivate: [roleGuard(['ADMIN'])] },
       {
         path: 'dashboard',

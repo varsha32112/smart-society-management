@@ -149,4 +149,7 @@ public class VisitorService {
                 f.getId(), f.getBlockName() + "-" + f.getFlatNumber(),
                 v.getStatus(), v.getEntryTime(), v.getExitTime(), v.getCreatedAt());
     }
+    public List<VisitorResponse> recent() {
+        return visitorRepository.findTop50ByOrderByIdDesc().stream().map(this::toResponse).toList();
+    }
 }

@@ -61,4 +61,8 @@ public class VisitorController {
     public List<VisitorResponse> getAll() {
         return visitorService.getAll();
     }
+    @GetMapping("/recent")
+    public List<VisitorResponse> recent() {
+        return visitorService.recent();
+    }
 }
