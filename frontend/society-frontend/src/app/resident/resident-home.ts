@@ -8,6 +8,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     <nav class="tabs">
       <a routerLink="visitors" routerLinkActive="active">Visitors</a>
       <a routerLink="complaints" routerLinkActive="active">Complaints</a>
+      <a routerLink="bills" routerLinkActive="active">Bills</a>
+      <a routerLink="family" routerLinkActive="active">Family</a>
     </nav>
     <router-outlet />
   `,

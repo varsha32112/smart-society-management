@@ -9,6 +9,8 @@ import { MyVisitors } from './resident/my-visitors';
 import { SecurityHome } from './security/security-home';
 import { AdminHome } from './admin/admin-home';
 import { MyComplaints } from './resident/my-complaints';
+import { MyBills } from './resident/my-bills';
+import { MyFamily } from './resident/my-family';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -24,7 +26,9 @@ export const routes: Routes = [
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'visitors' },
           { path: 'visitors', component: MyVisitors },
-          { path: 'complaints', component: MyComplaints }
+          { path: 'complaints', component: MyComplaints },
+          { path: 'bills', component: MyBills },
+          { path: 'family', component: MyFamily }
         ]
       },
       { path: 'security', component: SecurityHome, canActivate: [roleGuard(['SECURITY'])] },
