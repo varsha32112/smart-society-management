@@ -10,10 +10,12 @@ import com.society.society_backend.entity.User;
 import com.society.society_backend.repository.FlatRepository;
 import com.society.society_backend.repository.UserRepository;
 import com.society.society_backend.security.JwtService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -35,39 +37,37 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        if (userRepository.findByEmail(request.email()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already registered");
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+        String email = request.email().trim().toLowerCase();
+
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
+
+        Flat flat = flatRepository.findById(request.flatId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "The selected flat does not exist"));
 
         User user = new User();
-        user.setFullName(request.fullName());
-        user.setEmail(request.email());
-        user.setPhone(request.phone());
+        user.setFullName(request.fullName().trim());
+        user.setEmail(email);
+        user.setPhone(request.phone() == null || request.phone().isBlank() ? null : request.phone().trim());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(Role.RESIDENT);   // public sign-up is always a resident
-
-        if (request.flatId() != null) {
-            Flat flat = flatRepository.findById(request.flatId()).orElse(null);
-            if (flat == null) {
-                return ResponseEntity.badRequest().body("Flat not found");
-            }
-            user.setFlat(flat);
-        }
+        user.setFlat(flat);
 
         User saved = userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        User user = userRepository.findByEmail(request.email()).orElse(null);
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        User user = userRepository.findByEmail(request.email().trim().toLowerCase()).orElse(null);
 
         if (user == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
         if (!Boolean.TRUE.equals(user.getActive())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account is disabled");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is disabled");
         }
 
         String token = jwtService.generateToken(user);
