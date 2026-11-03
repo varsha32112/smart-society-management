@@ -15,6 +15,8 @@ import { RegisterVisitor } from './security/register-visitor';
 import { GateLog } from './security/gate-log';
 import { AdminHome } from './admin/admin-home';
 import { AdminComplaints } from './admin/admin-complaints';
+import { AdminBills } from './admin/admin-bills';
+import { AdminFlats } from './admin/admin-flats';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -54,7 +56,9 @@ export const routes: Routes = [
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'complaints' },
           { path: 'complaints', component: AdminComplaints },
-          { path: 'notices', component: Notices }
+          { path: 'notices', component: Notices },
+          { path: 'bills', component: AdminBills },
+          { path: 'flats', component: AdminFlats }
         ]
       },
       {
@@ -66,6 +70,7 @@ export const routes: Routes = [
         }
       },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' }
+
     ]
   },
   { path: '**', redirectTo: '' }

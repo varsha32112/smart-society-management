@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface FlatRepository extends JpaRepository<Flat, Long> {
 
     boolean existsByBlockNameAndFlatNumber(String blockName, String flatNumber);
+
+    boolean existsByBlockNameAndFlatNumberAndIdNot(String blockName, String flatNumber, Long id);
 }

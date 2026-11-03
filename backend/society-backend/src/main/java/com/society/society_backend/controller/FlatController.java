@@ -2,12 +2,11 @@ package com.society.society_backend.controller;
 
 import com.society.society_backend.dto.FlatRequest;
 import com.society.society_backend.entity.Flat;
-import com.society.society_backend.repository.FlatRepository;
+import com.society.society_backend.service.FlatService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -15,30 +14,30 @@ import java.util.List;
 @RequestMapping("/api/flats")
 public class FlatController {
 
-    private final FlatRepository flatRepository;
+    private final FlatService flatService;
 
-    public FlatController(FlatRepository flatRepository) {
-        this.flatRepository = flatRepository;
+    public FlatController(FlatService flatService) {
+        this.flatService = flatService;
     }
 
     @GetMapping
-    public List<Flat> getAllFlats() {
-        return flatRepository.findAll();
+    public List<Flat> list() {
+        return flatService.list();
     }
 
     @PostMapping
-    public ResponseEntity<Flat> addFlat(@Valid @RequestBody FlatRequest request) {
-        String block = request.blockName().trim().toUpperCase();
-        String number = request.flatNumber().trim().toUpperCase();
+    public ResponseEntity<Flat> add(@Valid @RequestBody FlatRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(flatService.add(request));
+    }
 
-        if (flatRepository.existsByBlockNameAndFlatNumber(block, number)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Flat " + block + "-" + number + " already exists");
-        }
+    @PutMapping("/{id}")
+    public Flat update(@PathVariable Long id, @Valid @RequestBody FlatRequest request) {
+        return flatService.update(id, request);
+    }
 
-        Flat flat = new Flat();
-        flat.setBlockName(block);
-        flat.setFlatNumber(number);
-        flat.setFloorNo(request.floorNo());
-        return ResponseEntity.status(HttpStatus.CREATED).body(flatRepository.save(flat));
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        flatService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

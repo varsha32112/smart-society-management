@@ -14,6 +14,7 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, Long> 
     List<Maintenance> findByStatusOrderByBillMonthDescIdDesc(MaintenanceStatus status);
 
     List<Maintenance> findAllByOrderByBillMonthDescIdDesc();
+    boolean existsByFlatId(Long flatId);
 
     boolean existsByFlatIdAndBillMonth(Long flatId, LocalDate billMonth);
 }

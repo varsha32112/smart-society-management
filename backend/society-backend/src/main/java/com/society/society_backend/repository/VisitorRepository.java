@@ -10,4 +10,5 @@ public interface VisitorRepository extends JpaRepository<Visitor, Long>{
     List<Visitor> findByFlatIdAndStatusOrderByIdDesc(Long flatId, VisitorStatus status);
     List<Visitor> findTop50ByOrderByIdDesc();
     List<Visitor> findAllByOrderByIdDesc();
+    boolean existsByFlatId(Long flatId);
 }
