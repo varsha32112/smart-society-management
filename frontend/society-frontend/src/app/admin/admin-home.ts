@@ -1,41 +1,25 @@
-import { Component, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-
-interface Flat {
-  id: number;
-  blockName: string;
-  flatNumber: string;
-  floorNo: number | null;
-}
+import { Component } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-admin-home',
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
-    <h2>Admin area</h2>
-    <h3>Flats</h3>
-
-    @if (error()) {
-      <p style="color: #c0392b">{{ error() }}</p>
+    <nav class="tabs">
+      <a routerLink="complaints" routerLinkActive="active">Complaints</a>
+      <a routerLink="notices" routerLinkActive="active">Notices</a>
+    </nav>
+    <router-outlet />
+  `,
+  styles: `
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #d5dce6; }
+    a {
+      padding: 8px 16px;
+      color: #1f3864;
+      text-decoration: none;
+      border-bottom: 3px solid transparent;
     }
-
-    <ul>
-      @for (flat of flats(); track flat.id) {
-        <li>{{ flat.blockName }}-{{ flat.flatNumber }} (floor {{ flat.floorNo }})</li>
-      } @empty {
-        <li>No flats found.</li>
-      }
-    </ul>
+    a.active { border-bottom-color: #1f3864; font-weight: bold; }
   `
 })
-export class AdminHome {
-  private http = inject(HttpClient);
-  flats = signal<Flat[]>([]);
-  error = signal('');
-
-  constructor() {
-    this.http.get<Flat[]>('/api/flats').subscribe({
-      next: (list) => this.flats.set(list),
-      error: () => this.error.set('Could not load flats')
-    });
-  }
-}
+export class AdminHome {}

@@ -10,6 +10,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       <a routerLink="complaints" routerLinkActive="active">Complaints</a>
       <a routerLink="bills" routerLinkActive="active">Bills</a>
       <a routerLink="family" routerLinkActive="active">Family</a>
+      <a routerLink="notices" routerLinkActive="active">Notices</a>
     </nav>
     <router-outlet />
   `,

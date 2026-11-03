@@ -20,15 +20,30 @@ export interface NewComplaint {
   description: string;
 }
 
+export interface StatusUpdate {
+  status: ComplaintStatus;
+  adminRemarks: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ComplaintService {
   private http = inject(HttpClient);
 
+  // Resident
   myComplaints() {
     return this.http.get<Complaint[]>('/api/complaints/my');
   }
 
   raise(complaint: NewComplaint) {
     return this.http.post<Complaint>('/api/complaints', complaint);
+  }
+
+  // Admin
+  all() {
+    return this.http.get<Complaint[]>('/api/complaints');
+  }
+
+  updateStatus(id: number, update: StatusUpdate) {
+    return this.http.put<Complaint>(`/api/complaints/${id}/status`, update);
   }
 }
