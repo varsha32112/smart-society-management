@@ -11,6 +11,7 @@ import com.society.society_backend.repository.FlatRepository;
 import com.society.society_backend.repository.UserRepository;
 import com.society.society_backend.security.JwtService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,19 +26,27 @@ public class AuthController {
     private final FlatRepository flatRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final boolean publicRegistration;
 
     public AuthController(UserRepository userRepository,
                           FlatRepository flatRepository,
                           PasswordEncoder passwordEncoder,
-                          JwtService jwtService) {
+                          JwtService jwtService,
+                          @Value("${society.public-registration:false}") boolean publicRegistration) {
         this.userRepository = userRepository;
         this.flatRepository = flatRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.publicRegistration = publicRegistration;
     }
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+        if (!publicRegistration) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Registration is closed. Please contact the society office.");
+        }
+
         String email = request.email().trim().toLowerCase();
 
         if (userRepository.findByEmail(email).isPresent()) {
@@ -52,7 +61,7 @@ public class AuthController {
         user.setEmail(email);
         user.setPhone(request.phone() == null || request.phone().isBlank() ? null : request.phone().trim());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setRole(Role.RESIDENT);   // public sign-up is always a resident
+        user.setRole(Role.RESIDENT);
         user.setFlat(flat);
 
         User saved = userRepository.save(user);

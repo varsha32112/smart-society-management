@@ -1,0 +1,12 @@
+package com.society.society_backend.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
+public record PasswordReset(
+        @NotBlank(message = "Password is required")
+        @Size(min = 8, max = 72, message = "Password must be 8 to 72 characters")
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).*$", message = "Password must contain at least one letter and one number")
+        String newPassword) {
+}

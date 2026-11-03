@@ -20,3 +20,11 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => () => {
   }
   return allowedRoles.includes(user.role) ? true : router.createUrlTree(['/dashboard']);
 };
+
+// Sends each person to the home screen of their own role
+export const homeGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const role = auth.currentUser()?.role;
+  return role ? router.createUrlTree(['/' + role.toLowerCase()]) : router.createUrlTree(['/login']);
+};

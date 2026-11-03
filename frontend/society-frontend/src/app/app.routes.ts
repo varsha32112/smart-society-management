@@ -1,7 +1,5 @@
-import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
-import { AuthService } from './core/auth.service';
-import { authGuard, roleGuard } from './core/guards';
+import { authGuard, homeGuard, roleGuard } from './core/guards';
 import { Login } from './login/login';
 import { Shell } from './shell/shell';
 import { Notices } from './shared/notices';
@@ -17,6 +15,7 @@ import { AdminHome } from './admin/admin-home';
 import { AdminComplaints } from './admin/admin-complaints';
 import { AdminBills } from './admin/admin-bills';
 import { AdminFlats } from './admin/admin-flats';
+import { AdminPeople } from './admin/admin-people';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -58,19 +57,12 @@ export const routes: Routes = [
           { path: 'complaints', component: AdminComplaints },
           { path: 'notices', component: Notices },
           { path: 'bills', component: AdminBills },
-          { path: 'flats', component: AdminFlats }
+          { path: 'flats', component: AdminFlats },
+          { path: 'people', component: AdminPeople }
         ]
       },
-      {
-        path: 'dashboard',
-        pathMatch: 'full',
-        redirectTo: () => {
-          const role = inject(AuthService).currentUser()?.role;
-          return role ? '/' + role.toLowerCase() : '/login';
-        }
-      },
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' }
-
+      { path: 'dashboard', pathMatch: 'full', canActivate: [homeGuard], children: [] },
+      { path: '', pathMatch: 'full', canActivate: [homeGuard], children: [] }
     ]
   },
   { path: '**', redirectTo: '' }

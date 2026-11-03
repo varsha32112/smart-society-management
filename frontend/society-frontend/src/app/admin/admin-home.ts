@@ -10,11 +10,12 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       <a routerLink="notices" routerLinkActive="active">Notices</a>
       <a routerLink="bills" routerLinkActive="active">Bills</a>
       <a routerLink="flats" routerLinkActive="active">Flats</a>
+      <a routerLink="people" routerLinkActive="active">People</a>
     </nav>
     <router-outlet />
   `,
   styles: `
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #d5dce6; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #d5dce6; }
     a {
       padding: 8px 16px;
       color: #1f3864;
