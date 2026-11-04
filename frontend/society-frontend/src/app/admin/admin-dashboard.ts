@@ -1,13 +1,14 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { ReportService, ReportSummary } from '../core/report.service';
 import { errorMessage } from '../core/error-message';
+import { PieChart, Slice } from '../shared/pie-chart';
 
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [RouterLink, CurrencyPipe, DatePipe],
+  imports: [RouterLink, CurrencyPipe, DatePipe, PieChart],
   template: `
     <div class="header">
       <h2>Dashboard</h2>
@@ -28,7 +29,7 @@ import { errorMessage } from '../core/error-message';
     } @else {
       @if (data(); as d) {
         <div class="grid">
-          <a class="panel" routerLink="/admin/visitors">
+          <a class="panel link" routerLink="/admin/visitors">
             <h3>Visitors</h3>
             <div class="stats">
               <div class="stat"><span class="num">{{ d.visitors.insideNow }}</span><span>Inside now</span></div>
@@ -40,7 +41,7 @@ import { errorMessage } from '../core/error-message';
             </div>
           </a>
 
-          <a class="panel" routerLink="/admin/complaints">
+          <a class="panel link" routerLink="/admin/complaints">
             <h3>Complaints</h3>
             <div class="stats">
               <div class="stat" [class.alert]="d.complaints.open > 0">
@@ -51,7 +52,7 @@ import { errorMessage } from '../core/error-message';
             </div>
           </a>
 
-          <a class="panel" routerLink="/admin/bills">
+          <a class="panel link" routerLink="/admin/bills">
             <h3>Maintenance bills</h3>
             <div class="stats">
               <div class="stat" [class.alert]="d.billing.pendingBills > 0">
@@ -65,7 +66,7 @@ import { errorMessage } from '../core/error-message';
             </div>
           </a>
 
-          <a class="panel" routerLink="/admin/people">
+          <a class="panel link" routerLink="/admin/people">
             <h3>Society</h3>
             <div class="stats">
               <div class="stat"><span class="num">{{ d.society.flats }}</span><span>Flats</span></div>
@@ -73,6 +74,18 @@ import { errorMessage } from '../core/error-message';
               <div class="stat"><span class="num">{{ d.society.securityStaff }}</span><span>Security staff</span></div>
             </div>
           </a>
+        </div>
+
+        <h3 class="charts-title">Charts</h3>
+        <div class="grid">
+          <div class="panel">
+            <h3>Complaints by status</h3>
+            <app-pie-chart title="Complaints by status" [slices]="complaintSlices()" />
+          </div>
+          <div class="panel">
+            <h3>Maintenance: unpaid vs collected</h3>
+            <app-pie-chart title="Maintenance amounts, unpaid versus collected" [slices]="billSlices()" />
+          </div>
         </div>
       }
     }
@@ -82,7 +95,7 @@ import { errorMessage } from '../core/error-message';
     .right { display: flex; align-items: center; gap: 12px; }
     .meta { color: #777777; font-size: 13px; }
     .error { color: #c0392b; }
-    .grid { display: flex; flex-wrap: wrap; gap: 16px; }
+    .grid { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }
     .panel {
       width: 340px;
       padding: 16px 20px;
@@ -92,8 +105,9 @@ import { errorMessage } from '../core/error-message';
       color: inherit;
       text-decoration: none;
     }
-    .panel:hover { border-color: #1f3864; }
+    a.link:hover { border-color: #1f3864; }
     .panel h3 { margin: 0 0 12px; color: #1f3864; }
+    .charts-title { margin: 24px 0 12px; color: #1f3864; }
     .stats { display: flex; flex-wrap: wrap; gap: 12px; }
     .stat {
       display: flex;
@@ -117,6 +131,31 @@ export class AdminDashboard {
   loading = signal(true);
   error = signal('');
   updatedAt = signal<Date | null>(null);
+
+  complaintSlices = computed<Slice[]>(() => {
+    const d = this.data();
+    if (!d) {
+      return [];
+    }
+    return [
+      { label: 'Open', value: d.complaints.open, display: String(d.complaints.open), color: '#e0a800' },
+      { label: 'In progress', value: d.complaints.inProgress, display: String(d.complaints.inProgress), color: '#3b6fd4' },
+      { label: 'Resolved', value: d.complaints.resolved, display: String(d.complaints.resolved), color: '#2e8b57' }
+    ];
+  });
+
+  billSlices = computed<Slice[]>(() => {
+    const d = this.data();
+    if (!d) {
+      return [];
+    }
+    const money = (n: number) =>
+      '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return [
+      { label: 'Unpaid', value: d.billing.pendingAmount, display: money(d.billing.pendingAmount), color: '#c0392b' },
+      { label: 'Collected', value: d.billing.paidAmount, display: money(d.billing.paidAmount), color: '#2e8b57' }
+    ];
+  });
 
   constructor() {
     this.load(true);
