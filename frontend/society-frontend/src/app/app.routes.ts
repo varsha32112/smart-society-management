@@ -16,6 +16,7 @@ import { AdminComplaints } from './admin/admin-complaints';
 import { AdminBills } from './admin/admin-bills';
 import { AdminFlats } from './admin/admin-flats';
 import { AdminPeople } from './admin/admin-people';
+import { Profile } from './shared/profile';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -61,6 +62,7 @@ export const routes: Routes = [
           { path: 'people', component: AdminPeople }
         ]
       },
+      { path: 'profile', component: Profile },
       { path: 'dashboard', pathMatch: 'full', canActivate: [homeGuard], children: [] },
       { path: '', pathMatch: 'full', canActivate: [homeGuard], children: [] }
     ]

@@ -1,16 +1,17 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink],
   template: `
     <header class="bar">
-      <strong>Smart Society</strong>
+      <a class="brand" routerLink="/">Smart Society</a>
       <span class="spacer"></span>
       @if (auth.currentUser(); as user) {
         <span class="who">{{ user.fullName }} ({{ user.role }})</span>
+        <a class="link" routerLink="/profile">My profile</a>
       }
       <button (click)="auth.logout()">Log out</button>
     </header>
@@ -28,8 +29,10 @@ import { AuthService } from '../core/auth.service';
       color: #ffffff;
       font-family: Arial, sans-serif;
     }
+    .brand { color: #ffffff; font-weight: bold; text-decoration: none; }
     .spacer { flex: 1; }
     .who { font-size: 14px; }
+    .link { color: #ffffff; font-size: 14px; }
     button {
       padding: 6px 14px;
       border: 1px solid #ffffff;

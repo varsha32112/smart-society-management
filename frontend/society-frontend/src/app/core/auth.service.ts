@@ -59,4 +59,13 @@ export class AuthService {
       return null;
     }
   }
+    updateSavedName(fullName: string) {
+    const user = this.currentUser();
+    if (!user) {
+      return;
+    }
+    const updated = { ...user, fullName };
+    localStorage.setItem(USER_KEY, JSON.stringify(updated));
+    this.currentUser.set(updated);
+  }
 }
