@@ -11,4 +11,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByFlatId(Long flatId);
     List<User> findAllByOrderByIdDesc();
     List<User> findByRoleAndFullNameContainingIgnoreCase(Role role, String name);
+    long countByRoleAndActiveTrue(Role role);
 }

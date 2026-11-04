@@ -56,4 +56,8 @@ export class VisitorService {
   recordExit(id: number) {
     return this.http.put<Visitor>(`/api/visitors/${id}/exit`, {});
   }
+    // Admin
+  all() {
+    return this.http.get<Visitor[]>('/api/visitors');
+  }
 }

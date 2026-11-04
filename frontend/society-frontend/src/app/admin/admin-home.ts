@@ -6,9 +6,11 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     <nav class="tabs">
+      <a routerLink="dashboard" routerLinkActive="active">Dashboard</a>
       <a routerLink="complaints" routerLinkActive="active">Complaints</a>
-      <a routerLink="notices" routerLinkActive="active">Notices</a>
+      <a routerLink="visitors" routerLinkActive="active">Visitors</a>
       <a routerLink="bills" routerLinkActive="active">Bills</a>
+      <a routerLink="notices" routerLinkActive="active">Notices</a>
       <a routerLink="flats" routerLinkActive="active">Flats</a>
       <a routerLink="people" routerLinkActive="active">People</a>
     </nav>

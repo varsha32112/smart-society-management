@@ -120,7 +120,7 @@ public class VisitorService {
     }
 
     public List<VisitorResponse> getAll() {
-        return visitorRepository.findAllByOrderByIdDesc().stream().map(this::toResponse).toList();
+        return visitorRepository.findTop500ByOrderByIdDesc().stream().map(this::toResponse).toList();
     }
 
     // ---------- helpers ----------

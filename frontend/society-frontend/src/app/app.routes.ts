@@ -17,6 +17,8 @@ import { AdminBills } from './admin/admin-bills';
 import { AdminFlats } from './admin/admin-flats';
 import { AdminPeople } from './admin/admin-people';
 import { Profile } from './shared/profile';
+import { AdminDashboard } from './admin/admin-dashboard';
+import { AdminVisitors } from './admin/admin-visitors';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -53,14 +55,17 @@ export const routes: Routes = [
         path: 'admin',
         component: AdminHome,
         canActivate: [roleGuard(['ADMIN'])],
-        children: [
-          { path: '', pathMatch: 'full', redirectTo: 'complaints' },
-          { path: 'complaints', component: AdminComplaints },
-          { path: 'notices', component: Notices },
-          { path: 'bills', component: AdminBills },
-          { path: 'flats', component: AdminFlats },
-          { path: 'people', component: AdminPeople }
-        ]
+          children: [
+            { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+            { path: 'dashboard', component: AdminDashboard },
+            { path: 'complaints', component: AdminComplaints },
+            { path: 'visitors', component: AdminVisitors },
+            { path: 'bills', component: AdminBills },
+            { path: 'notices', component: Notices },
+            { path: 'flats', component: AdminFlats },
+            { path: 'people', component: AdminPeople }
+          ]
+        
       },
       { path: 'profile', component: Profile },
       { path: 'dashboard', pathMatch: 'full', canActivate: [homeGuard], children: [] },
