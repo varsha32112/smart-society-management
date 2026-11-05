@@ -1,0 +1,46 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Kolkata
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: smart_society
+      MYSQL_USER: society
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  backend:
+    build: ./backend/society-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Kolkata
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/smart_society
+      SPRING_DATASOURCE_USERNAME: society
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_JPA_SHOW_SQL: "false"
+      JWT_SECRET: ${JWT_SECRET}
+      SOCIETY_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      SOCIETY_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+
+  frontend:
+    build: ./frontend/society-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8088:80"
+
+volumes:
+  db_data:
