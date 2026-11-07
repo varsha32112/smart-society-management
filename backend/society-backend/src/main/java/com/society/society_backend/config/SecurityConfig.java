@@ -61,7 +61,8 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/family", "/api/family/**").hasRole("RESIDENT")
 
-                        .anyRequest().authenticated())
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().permitAll())
                 .addFilterBefore(new JwtAuthFilter(jwtService, userRepository), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
