@@ -1,7 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { Bill, MaintenanceService } from '../core/maintenance.service';
+import { PaymentService } from '../core/payment.service';
 import { errorMessage } from '../core/error-message';
 
 @Component({
@@ -10,10 +12,19 @@ import { errorMessage } from '../core/error-message';
   template: `
     <div class="header">
       <h2>My Bills</h2>
-      <button class="refresh" (click)="load()">Refresh</button>
+      <button class="refresh" (click)="load(true)">Refresh</button>
     </div>
-    <p class="hint">Maintenance bills for your flat. Payments are recorded by the society office.</p>
+    <p class="hint">
+      @if (paymentsEnabled()) {
+        Maintenance bills for your flat. Pay online, or pay the society office, which records the payment.
+      } @else {
+        Maintenance bills for your flat. Payments are recorded by the society office.
+      }
+    </p>
 
+    @if (success()) {
+      <p class="success">{{ success() }}</p>
+    }
     @if (error()) {
       <p class="error">{{ error() }}</p>
     }
@@ -39,6 +50,11 @@ import { errorMessage } from '../core/error-message';
           @if (b.paidOn) {
             <p class="meta">Paid on {{ b.paidOn | date: 'd MMM y' }}</p>
           }
+          @if (b.status === 'PENDING' && paymentsEnabled()) {
+            <button class="pay" [disabled]="payingId() !== null" (click)="pay(b)">
+              {{ payingId() === b.id ? 'Opening payment...' : 'Pay now' }}
+            </button>
+          }
         </div>
       } @empty {
         <p>No bills have been generated for your flat yet.</p>
@@ -49,6 +65,7 @@ import { errorMessage } from '../core/error-message';
     .header { display: flex; align-items: center; justify-content: space-between; }
     .hint { color: #666666; margin-top: 0; }
     .error { color: #c0392b; }
+    .success { color: #1e6b32; }
     .summary {
       display: flex;
       justify-content: space-between;
@@ -74,17 +91,23 @@ import { errorMessage } from '../core/error-message';
     .pending { background: #fff3cd; color: #8a6d0b; }
     .paid { background: #d4edda; color: #1e6b32; }
     button { padding: 7px 16px; border: none; border-radius: 6px; color: #ffffff; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
     .refresh { background: #1f3864; }
+    .pay { margin-top: 8px; background: #2e8b57; }
   `
 })
 export class MyBills {
   private maintenanceService = inject(MaintenanceService);
+  private paymentService = inject(PaymentService);
 
   bills = signal<Bill[]>([]);
   loading = signal(true);
   error = signal('');
+  success = signal('');
+  paymentsEnabled = signal(false);
+  payingId = signal<number | null>(null);
 
-  // Total of unpaid bills, added up in paise to avoid decimal rounding noise.
+  // Total of unpaid bills, added up in paise to avoid decimal rounding noise. Display only.
   outstanding = computed(() => {
     const paise = this.bills()
       .filter((b) => b.status === 'PENDING')
@@ -93,11 +116,31 @@ export class MyBills {
   });
 
   constructor() {
-    this.load();
+    this.load(true);
+
+    this.paymentService.config().subscribe({
+      next: (config) => this.paymentsEnabled.set(config.enabled),
+      error: () => this.paymentsEnabled.set(false)
+    });
+
+    // If a payment was made but the window was closed before we heard back, catch up now.
+    this.paymentService.reconcile().subscribe({
+      next: (result) => {
+        if (result.updated > 0) {
+          this.success.set('A payment you made earlier has now been confirmed.');
+          this.load(false);
+        }
+      },
+      error: () => {
+        /* not critical */
+      }
+    });
   }
 
-  load() {
-    this.loading.set(true);
+  load(showSpinner: boolean) {
+    if (showSpinner) {
+      this.loading.set(true);
+    }
     this.error.set('');
     this.maintenanceService.myBills().subscribe({
       next: (list) => {
@@ -109,5 +152,30 @@ export class MyBills {
         this.loading.set(false);
       }
     });
+  }
+
+  async pay(bill: Bill) {
+    this.error.set('');
+    this.success.set('');
+    this.payingId.set(bill.id);
+
+    try {
+      const order = await firstValueFrom(this.paymentService.createOrder(bill.id));
+      const result = await this.paymentService.openCheckout(order);
+      await firstValueFrom(this.paymentService.verify(result));
+      this.success.set('Payment received. Thank you!');
+      this.load(false);
+    } catch (e) {
+      if (e instanceof HttpErrorResponse) {
+        this.error.set(errorMessage(e));
+      } else if (e instanceof Error) {
+        this.error.set(e.message);
+      } else {
+        this.error.set('The payment was not completed.');
+      }
+      this.load(false);
+    } finally {
+      this.payingId.set(null);
+    }
   }
 }
