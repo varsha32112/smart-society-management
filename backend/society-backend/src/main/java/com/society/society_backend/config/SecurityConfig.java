@@ -61,6 +61,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/family", "/api/family/**").hasRole("RESIDENT")
                         .requestMatchers("/api/payments/**").hasRole("RESIDENT")
+                        .requestMatchers("/api/upi/**").hasRole("RESIDENT")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())
                 .addFilterBefore(new JwtAuthFilter(jwtService, userRepository), UsernamePasswordAuthenticationFilter.class);

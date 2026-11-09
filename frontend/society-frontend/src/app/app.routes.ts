@@ -19,6 +19,7 @@ import { AdminPeople } from './admin/admin-people';
 import { Profile } from './shared/profile';
 import { AdminDashboard } from './admin/admin-dashboard';
 import { AdminVisitors } from './admin/admin-visitors';
+import { AdminUpi } from './admin/admin-upi';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -63,7 +64,8 @@ export const routes: Routes = [
             { path: 'bills', component: AdminBills },
             { path: 'notices', component: Notices },
             { path: 'flats', component: AdminFlats },
-            { path: 'people', component: AdminPeople }
+            { path: 'people', component: AdminPeople },
+            { path: 'upi', component: AdminUpi }
           ]
         
       },

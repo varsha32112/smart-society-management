@@ -57,7 +57,8 @@ export class PaymentService {
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error('The payment window could not be loaded. Check your internet connection.'));
+      script.onerror = () =>
+        reject(new Error('The payment window could not be loaded. Check your internet connection.'));
       document.body.appendChild(script);
     });
   }
@@ -72,7 +73,7 @@ export class PaymentService {
 
     return new Promise<CheckoutResult>((resolve, reject) => {
       let finished = false;
-      const window_ = new Checkout({
+      const checkout = new Checkout({
         key: order.keyId,
         amount: order.amount,
         currency: order.currency,
@@ -80,6 +81,18 @@ export class PaymentService {
         name: 'Smart Society',
         description: order.description,
         theme: { color: '#1f3864' },
+        config: {
+          display: {
+            blocks: {
+              preferred: {
+                name: 'Pay using UPI',
+                instruments: [{ method: 'upi' }]
+              }
+            },
+            sequence: ['block.preferred'],
+            preferences: { show_default_blocks: true }
+          }
+        },
         handler: (result: CheckoutResult) => {
           finished = true;
           resolve(result);
@@ -92,7 +105,7 @@ export class PaymentService {
           }
         }
       });
-      window_.open();
+      checkout.open();
     });
   }
 }
