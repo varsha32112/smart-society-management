@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Complaint, ComplaintService, ComplaintStatus } from '../core/complaint.service';
+import { PeopleService, Person } from '../core/people.service';
 import { errorMessage } from '../core/error-message';
 
 type Filter = 'ALL' | ComplaintStatus;
@@ -17,7 +18,10 @@ const ORDER: ComplaintStatus[] = ['OPEN', 'IN_PROGRESS', 'RESOLVED'];
       <h2>Complaints</h2>
       <button class="refresh" (click)="load(true)">Refresh</button>
     </div>
-    <p class="hint">All complaints raised by residents. A complaint's status can only move forward.</p>
+    <p class="hint">
+      All complaints raised by residents. A complaint's status can only move forward. Assign a complaint to a
+      housekeeping staff member to put it on their task list.
+    </p>
 
     <div class="filters">
       @for (f of filters; track f.key) {
@@ -49,7 +53,21 @@ const ORDER: ComplaintStatus[] = ['OPEN', 'IN_PROGRESS', 'RESOLVED'];
           }
           <p class="meta">Raised: {{ c.createdAt | date: 'd MMM y, h:mm a' }}</p>
           @if (c.adminRemarks) {
-            <p class="remarks"><strong>Your remarks:</strong> {{ c.adminRemarks }}</p>
+            <p class="remarks"><strong>Latest note:</strong> {{ c.adminRemarks }}</p>
+          }
+
+          @if (c.status !== 'RESOLVED') {
+            <p class="assign">
+              <label>Assigned to</label>
+              <select [disabled]="assigningId() === c.id" (change)="assign(c, $any($event.target).value)">
+                <option value="" [selected]="c.assignedToId === null">Unassigned</option>
+                @for (s of staff(); track s.id) {
+                  <option [value]="s.id" [selected]="s.id === c.assignedToId">{{ s.fullName }}</option>
+                }
+              </select>
+            </p>
+          } @else if (c.assignedToName) {
+            <p class="meta">Handled by {{ c.assignedToName }}</p>
           }
 
           @if (c.status === 'RESOLVED') {
@@ -116,6 +134,7 @@ const ORDER: ComplaintStatus[] = ['OPEN', 'IN_PROGRESS', 'RESOLVED'];
     .who { color: #444444; font-size: 14px; }
     .meta { color: #777777; font-size: 13px; }
     .remarks { padding: 8px 10px; background: #eef2f7; border-radius: 6px; }
+    .assign { display: flex; align-items: center; gap: 8px; font-size: 14px; }
     .badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
     .open { background: #fff3cd; color: #8a6d0b; }
     .in_progress { background: #d6e4ff; color: #1f3d7a; }
@@ -137,6 +156,7 @@ const ORDER: ComplaintStatus[] = ['OPEN', 'IN_PROGRESS', 'RESOLVED'];
       font-family: inherit;
       font-size: 14px;
     }
+    .assign select { margin-bottom: 0; }
     .actions { display: flex; gap: 8px; }
     button { border: none; border-radius: 6px; color: #ffffff; cursor: pointer; }
     button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -148,6 +168,7 @@ const ORDER: ComplaintStatus[] = ['OPEN', 'IN_PROGRESS', 'RESOLVED'];
 })
 export class AdminComplaints {
   private complaintService = inject(ComplaintService);
+  private peopleService = inject(PeopleService);
 
   readonly filters: { key: Filter; label: string }[] = [
     { key: 'ALL', label: 'All' },
@@ -157,12 +178,14 @@ export class AdminComplaints {
   ];
 
   complaints = signal<Complaint[]>([]);
+  staff = signal<Person[]>([]);
   filter = signal<Filter>('ALL');
   loading = signal(true);
   error = signal('');
   success = signal('');
   panelError = signal('');
   busyId = signal<number | null>(null);
+  assigningId = signal<number | null>(null);
   editingId = signal<number | null>(null);
 
   newStatus: ComplaintStatus = 'OPEN';
@@ -176,6 +199,10 @@ export class AdminComplaints {
 
   constructor() {
     this.load(true);
+    this.peopleService.list().subscribe({
+      next: (list) => this.staff.set(list.filter((p) => p.role === 'HOUSEKEEPING' && p.active)),
+      error: () => this.staff.set([])
+    });
   }
 
   load(showSpinner: boolean) {
@@ -214,6 +241,34 @@ export class AdminComplaints {
       default:
         return 'Resolved';
     }
+  }
+
+  assign(c: Complaint, raw: string) {
+    const userId = raw ? Number(raw) : null;
+    if (userId === c.assignedToId) {
+      return;
+    }
+
+    this.assigningId.set(c.id);
+    this.error.set('');
+    this.success.set('');
+
+    this.complaintService.assign(c.id, userId).subscribe({
+      next: (updated) => {
+        this.complaints.update((list) => list.map((x) => (x.id === updated.id ? updated : x)));
+        this.assigningId.set(null);
+        this.success.set(
+          userId === null
+            ? `Complaint "${updated.title}" is now unassigned.`
+            : `Complaint "${updated.title}" assigned to ${updated.assignedToName}.`
+        );
+      },
+      error: (err: HttpErrorResponse) => {
+        this.error.set(errorMessage(err));
+        this.assigningId.set(null);
+        this.load(false);
+      }
+    });
   }
 
   startUpdate(c: Complaint) {

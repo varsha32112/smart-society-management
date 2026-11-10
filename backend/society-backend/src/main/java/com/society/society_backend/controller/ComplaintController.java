@@ -1,5 +1,6 @@
 package com.society.society_backend.controller;
 
+import com.society.society_backend.dto.AssignRequest;
 import com.society.society_backend.dto.ComplaintRequest;
 import com.society.society_backend.dto.ComplaintResponse;
 import com.society.society_backend.dto.ComplaintStatusUpdate;
@@ -32,6 +33,10 @@ public class ComplaintController {
     @GetMapping("/my")
     public List<ComplaintResponse> myComplaints(Authentication authentication) {
         return complaintService.myComplaints(authentication.getName());
+    }
+    @PutMapping("/{id}/assign")
+    public ComplaintResponse assign(@PathVariable Long id, @RequestBody AssignRequest request) {
+        return complaintService.assign(id, request.userId());
     }
 
     @GetMapping("/{id}")

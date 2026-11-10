@@ -12,6 +12,8 @@ export interface Complaint {
   residentId: number;
   residentName: string;
   flatLabel: string;
+  assignedToId: number | null;
+  assignedToName: string | null;
   createdAt: string | null;
 }
 
@@ -45,5 +47,9 @@ export class ComplaintService {
 
   updateStatus(id: number, update: StatusUpdate) {
     return this.http.put<Complaint>(`/api/complaints/${id}/status`, update);
+  }
+
+  assign(id: number, userId: number | null) {
+    return this.http.put<Complaint>(`/api/complaints/${id}/assign`, { userId });
   }
 }

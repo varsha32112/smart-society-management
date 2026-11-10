@@ -20,6 +20,8 @@ import { Profile } from './shared/profile';
 import { AdminDashboard } from './admin/admin-dashboard';
 import { AdminVisitors } from './admin/admin-visitors';
 import { AdminUpi } from './admin/admin-upi';
+import { HousekeepingHome } from './housekeeping/housekeeping-home';
+import { MyTasks } from './housekeeping/my-tasks';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -41,6 +43,16 @@ export const routes: Routes = [
           { path: 'notices', component: Notices }
         ]
       },
+      {
+        path: 'housekeeping',
+        component: HousekeepingHome,
+        canActivate: [roleGuard(['HOUSEKEEPING'])],
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'tasks' },
+          { path: 'tasks', component: MyTasks },
+          { path: 'notices', component: Notices }
+       ]
+     },
       {
         path: 'security',
         component: SecurityHome,

@@ -6,7 +6,7 @@ import { PeopleService, Person } from '../core/people.service';
 import { Flat, FlatService } from '../core/flat.service';
 import { errorMessage } from '../core/error-message';
 
-type Filter = 'ALL' | 'RESIDENT' | 'SECURITY' | 'INACTIVE';
+type Filter = 'ALL' | 'RESIDENT' | 'SECURITY' | 'HOUSEKEEPING' | 'INACTIVE';
 
 const SHOW_LIMIT = 100;
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -31,8 +31,8 @@ function passwordProblem(password: string): string {
       <button class="refresh" (click)="load(true)">Refresh</button>
     </div>
     <p class="hint">
-      Create resident and security accounts, deactivate people who have left, and reset forgotten passwords.
-      Admin accounts cannot be changed here.
+      Create resident, security and housekeeping accounts, deactivate people who have left, and reset forgotten
+      passwords. Admin accounts cannot be changed here.
     </p>
 
     <div class="form">
@@ -42,6 +42,7 @@ function passwordProblem(password: string): string {
       <select id="role" [(ngModel)]="role">
         <option value="RESIDENT">Resident</option>
         <option value="SECURITY">Security guard</option>
+        <option value="HOUSEKEEPING">Housekeeping staff</option>
       </select>
 
       <label for="fullName">Full name</label>
@@ -237,6 +238,7 @@ export class AdminPeople {
     { key: 'ALL', label: 'All' },
     { key: 'RESIDENT', label: 'Residents' },
     { key: 'SECURITY', label: 'Security' },
+    { key: 'HOUSEKEEPING', label: 'Housekeeping' },
     { key: 'INACTIVE', label: 'Inactive' }
   ];
 
@@ -254,7 +256,7 @@ export class AdminPeople {
   resetId = signal<number | null>(null);
   resetError = signal('');
 
-  role: 'RESIDENT' | 'SECURITY' = 'RESIDENT';
+  role: 'RESIDENT' | 'SECURITY' | 'HOUSEKEEPING' = 'RESIDENT';
   fullName = '';
   email = '';
   phone = '';
@@ -319,6 +321,8 @@ export class AdminPeople {
         return 'Admin';
       case 'RESIDENT':
         return 'Resident';
+      case 'HOUSEKEEPING':
+        return 'Housekeeping staff';
       default:
         return 'Security guard';
     }

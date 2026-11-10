@@ -20,6 +20,9 @@ public class Complaint {
     @ManyToOne(optional = false)
     @JoinColumn(name = "resident_id")
     private User resident;
+    @ManyToOne
+    @JoinColumn(name = "assigned_to")
+    private User assignedTo;
 
     @Column(nullable = false)
     private String title;

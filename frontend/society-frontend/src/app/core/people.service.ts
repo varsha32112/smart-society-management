@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-export type PersonRole = 'ADMIN' | 'RESIDENT' | 'SECURITY';
+export type PersonRole = 'ADMIN' | 'RESIDENT' | 'SECURITY' | 'HOUSEKEEPING';
 
 export interface Person {
   id: number;
@@ -20,7 +20,7 @@ export interface NewPerson {
   email: string;
   phone: string | null;
   password: string;
-  role: 'RESIDENT' | 'SECURITY';
+  role: 'RESIDENT' | 'SECURITY' | 'HOUSEKEEPING';
   flatId: number | null;
 }
 

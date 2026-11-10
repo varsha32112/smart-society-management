@@ -3,6 +3,7 @@ package com.society.society_backend.service;
 import com.society.society_backend.dto.ComplaintRequest;
 import com.society.society_backend.dto.ComplaintResponse;
 import com.society.society_backend.dto.ComplaintStatusUpdate;
+import com.society.society_backend.dto.TaskResponse;
 import com.society.society_backend.entity.Complaint;
 import com.society.society_backend.entity.ComplaintStatus;
 import com.society.society_backend.entity.Flat;
@@ -101,6 +102,55 @@ public class ComplaintService {
         return toResponse(complaintRepository.save(complaint));
     }
 
+    // ---------- housekeeping ----------
+
+    // Admin assigns a complaint to a housekeeping staff member, or clears the assignment.
+    @Transactional
+    public ComplaintResponse assign(Long complaintId, Long userId) {
+        Complaint complaint = findComplaint(complaintId);
+        if (complaint.getStatus() == ComplaintStatus.RESOLVED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A resolved complaint cannot be reassigned");
+        }
+
+        if (userId == null) {
+            complaint.setAssignedTo(null);
+        } else {
+            User staff = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Staff member not found"));
+            if (staff.getRole() != Role.HOUSEKEEPING || !Boolean.TRUE.equals(staff.getActive())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Choose an active housekeeping staff member");
+            }
+            complaint.setAssignedTo(staff);
+        }
+        return toResponse(complaintRepository.save(complaint));
+    }
+
+    // A staff member sees only the tasks assigned to them.
+    public List<TaskResponse> tasksFor(String staffEmail) {
+        User staff = findUser(staffEmail);
+        return complaintRepository.findByAssignedToIdOrderByIdDesc(staff.getId())
+                .stream().map(this::toTask).toList();
+    }
+
+    // A staff member can move their own task to In progress or Resolved, never back to Open.
+    @Transactional
+    public TaskResponse updateByStaff(Long id, String staffEmail, ComplaintStatusUpdate update) {
+        User staff = findUser(staffEmail);
+        Complaint complaint = findComplaint(id);
+
+        if (complaint.getAssignedTo() == null || !complaint.getAssignedTo().getId().equals(staff.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This task is not assigned to you");
+        }
+        if (update.status() == ComplaintStatus.OPEN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose In progress or Resolved");
+        }
+
+        ComplaintResponse updated = updateStatus(id, update);
+        return new TaskResponse(updated.id(), updated.title(), updated.description(), updated.status(),
+                updated.adminRemarks(), updated.flatLabel(), updated.createdAt());
+    }
+
     // ---------- helpers ----------
 
     private User findUser(String email) {
@@ -113,12 +163,24 @@ public class ComplaintService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Complaint not found"));
     }
 
+    private String flatLabel(User resident) {
+        Flat flat = resident.getFlat();
+        return flat == null ? "-" : flat.getBlockName() + "-" + flat.getFlatNumber();
+    }
+
     private ComplaintResponse toResponse(Complaint c) {
         User resident = c.getResident();
-        Flat flat = resident.getFlat();
-        String flatLabel = (flat == null) ? "-" : flat.getBlockName() + "-" + flat.getFlatNumber();
+        User assigned = c.getAssignedTo();
         return new ComplaintResponse(
                 c.getId(), c.getTitle(), c.getDescription(), c.getStatus(), c.getAdminRemarks(),
-                resident.getId(), resident.getFullName(), flatLabel, c.getCreatedAt());
+                resident.getId(), resident.getFullName(), flatLabel(resident),
+                assigned == null ? null : assigned.getId(),
+                assigned == null ? null : assigned.getFullName(),
+                c.getCreatedAt());
+    }
+
+    private TaskResponse toTask(Complaint c) {
+        return new TaskResponse(c.getId(), c.getTitle(), c.getDescription(), c.getStatus(),
+                c.getAdminRemarks(), flatLabel(c.getResident()), c.getCreatedAt());
     }
 }

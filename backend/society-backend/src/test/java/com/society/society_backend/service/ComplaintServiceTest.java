@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.society.society_backend.dto.TaskResponse;
 
 import java.util.Optional;
 
@@ -102,6 +103,45 @@ class ComplaintServiceTest {
                 .thenReturn(Optional.of(complaint(1, user(1, Role.RESIDENT), ComplaintStatus.OPEN)));
 
         expectStatus(() -> service.getById(1L, "other@x.com"), 403);
+    }
+    // ----- housekeeping -----
+
+    @Test
+    void assign_refusesSomeoneWhoIsNotHousekeepingStaff() {
+        when(complaintRepository.findById(1L))
+                .thenReturn(Optional.of(complaint(1, user(1, Role.RESIDENT), ComplaintStatus.OPEN)));
+        when(userRepository.findById(5L)).thenReturn(Optional.of(user(5, Role.SECURITY)));
+
+        expectStatus(() -> service.assign(1L, 5L), 400);
+    }
+
+    @Test
+    void staff_cannotUpdateATaskAssignedToSomeoneElse() {
+        Complaint task = complaint(1, user(1, Role.RESIDENT), ComplaintStatus.OPEN);
+        task.setAssignedTo(user(7, Role.HOUSEKEEPING));
+        when(userRepository.findByEmail("staff@x.com")).thenReturn(Optional.of(user(8, Role.HOUSEKEEPING)));
+        when(complaintRepository.findById(1L)).thenReturn(Optional.of(task));
+
+        expectStatus(() -> service.updateByStaff(1L, "staff@x.com",
+                new ComplaintStatusUpdate(ComplaintStatus.IN_PROGRESS, null)), 403);
+    }
+
+    @Test
+    void staff_canMoveTheirOwnTaskForwardButNotBackToOpen() {
+        User staff = user(8, Role.HOUSEKEEPING);
+        Complaint task = complaint(1, user(1, Role.RESIDENT), ComplaintStatus.OPEN);
+        task.setAssignedTo(staff);
+        when(userRepository.findByEmail("staff@x.com")).thenReturn(Optional.of(staff));
+        when(complaintRepository.findById(1L)).thenReturn(Optional.of(task));
+        when(complaintRepository.save(any(Complaint.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        expectStatus(() -> service.updateByStaff(1L, "staff@x.com",
+                new ComplaintStatusUpdate(ComplaintStatus.OPEN, "x")), 400);
+
+        TaskResponse result = service.updateByStaff(1L, "staff@x.com",
+                new ComplaintStatusUpdate(ComplaintStatus.IN_PROGRESS, "On it"));
+        assertThat(result.status()).isEqualTo(ComplaintStatus.IN_PROGRESS);
+        assertThat(result.remarks()).isEqualTo("On it");
     }
 
     @Test
